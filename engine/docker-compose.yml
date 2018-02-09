@@ -1,0 +1,78 @@
+version: '2'
+
+services:
+  cdh:
+    build:
+      context: dockerbuild/
+      dockerfile: Dockerfile-cdh
+    container_name: cdh
+    expose:
+      # ZooKeeper Port
+      - "2181"
+      # HDFS Ports
+      - "9000"
+      - "50010"
+      - "50020"
+      - "50070"
+      - "14000"
+      - "8020"
+      - "8022"
+      - "50470"
+      - "8032"
+      - "8033"
+      - "8030"
+      - "8031"
+      - "8088"
+      - "8090"
+      # Kafka Ports
+      - "9092"
+      # Hive Ports (Beeline e Web UI)
+      - "10000"
+      # Spark streaming Ports
+      #- "49744"
+    ports:
+      - "21050:21050" # Hue/JDBC/ODBC -> Impala
+      - "25000:25000" # Web impalad -> Impala
+      - "25010:25010" # Web state-store -> Impala
+      - "25020:25020" # Web catalogd -> Impala
+      - "9083:9083"   # Hive -> Thrift
+      - "50070:50070"
+      - "50075:50075"
+      - "8020:8020"
+      - "8042:8042"   # Yarn node manager
+      - "8088:8088"   # Yarn resource manager
+      - "9092:9092"   # Kafka
+      - "2181:2181"   # Zookeeper
+    volumes:
+      - ./:/files
+      - ./.ivy2:/root/.ivy2
+      - hdfs-data:/data
+    dns:
+      - 8.8.8.8
+
+    extra_hosts:
+      - "lvdn001-priv.b2w:10.13.9.17"
+      - "lvdn002-priv.b2w:10.13.9.18"
+      - "lvdn003-priv.b2w:10.13.9.19"
+      - "lvdn004-priv.b2w:10.13.9.22"
+      - "lvdn005-priv.b2w:10.13.9.23"
+      - "lvdn006-priv.b2w:10.13.9.24"
+      - "lvdn007-priv.b2w:10.13.9.25"
+      - "lvnn-priv.b2w:10.13.9.20"
+      - "lvsb-priv.b2w:10.13.9.21"
+      - "lvwrk01-priv.b2w:10.13.9.27"
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: passwd
+    volumes:
+      - mysql:/var/lib/mysql
+      - ./files:/files
+
+volumes:
+  hdfs-data:
+  mysql:

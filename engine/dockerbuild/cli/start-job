@@ -1,0 +1,23 @@
+#!/bin/bash
+
+echo "$DEBUG_MODE $JOB_ID"
+if [ -z "$DEBUG_MODE" ]; then
+  echo "The debug mode must be specified. Usage: start-job <DEBUG_MODE> <JOB ID>"
+  exit -1
+elif [ $DEBUG_MODE == true ]; then
+  export SPARK_SUBMIT_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5097"
+fi
+
+if [ -z "$JOB_ID" ]; then
+  echo "The job id must be specified. Usage: start-job <DEBUG_MODE> <JOB ID>"
+  exit -1
+fi
+
+/usr/lib/spark/bin/spark-submit \
+--conf spark.executorEnv.JAVA_HOME=$JAVA_HOME \
+--master yarn \
+--deploy-mode client \
+--class com.b2wdigital.vegas.ingest.Main \
+/opt/code/target/scala-2.10/ingestengine-assembly-0.2.jar \
+--def-api web-api:8080 \
+--job-id "$JOB_ID"

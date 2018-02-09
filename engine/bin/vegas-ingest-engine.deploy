@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# does a clean build first creating the war ball
+sudo docker run -it --volume $(pwd):/files --volume $(pwd)/.ivy2:/root/.ivy2 engine_cdh /files/bin/package.build
+
+
+# the deploy command
+export VERSION=`grep version build.sbt | awk -F":=" '{print $2}' | sed -e s/\"//g | sed -e s/" "//g`
+export TARGET_FILE=ingestengine-assembly-${VERSION}.jar
+export TARGET_LINK=ingestengine.jar
+
+scp -i ~/.ssh/id_rsa.pub target/scala-2.10/${TARGET_FILE} $USER@lvwrk01.b2w:/accounts/vegas/vegas-ingest/
+
+echo 'relink to the new deployment...'
+ssh -i ~/.ssh/id_rsa.pub $USER@lvwrk01.b2w unlink /accounts/vegas/vegas-ingest/${TARGET_LINK}
+ssh -i ~/.ssh/id_rsa.pub $USER@lvwrk01.b2w sudo ln -s /accounts/vegas/vegas-ingest/${TARGET_FILE} /accounts/vegas/vegas-ingest/${TARGET_LINK}
+echo 'Done.'

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+# checks for the war ball path arg
+[ $# -lt 2 ] && { echo "Usage : $0 [war ball path] [spring profile]"; exit 1; }
+
+# The Vegas Ingest API docker image is created with all necessary targets at /opt
+WAR_FILE_PATH=$1
+WAR_FILE=vegas-ingest-web.war
+PROFILE=$2
+
+java -Dspring.profiles.active=${PROFILE} -jar ${WAR_FILE_PATH}/${WAR_FILE}

@@ -1,0 +1,46 @@
+{
+    "name": "vegas_ingest_dev_test",
+    "definitionJson":
+    {
+        "name": "vegas_ingest_dev_test",
+        "account": "vegas",
+        "revision": "1",
+        "data_input": {
+            "atype": "kafka",
+            "args": {
+                "brokers": "localhost:9092",
+                "groupId": "veging_dev",
+                "topic": "test"
+            }
+        },
+        "transformers": [
+            {
+                "atype": "flatMap",
+                "args": {}
+            }
+        ],
+        "data_output": {
+            "atype": "hdfs",
+            "args": {
+                "base_dir": "/output/vegas-ingest/"
+            }
+        },
+        "execution": {
+            "atype": "stream",
+            "args": {
+                "master": "local[2]",
+                "directory": "/tmp/vegas_ingest",
+                "cron": "0 00 06,07,08 ? * * 2018",
+                "interval": "10",
+                "bucketSize": 1
+            }
+        },
+        "recovery": {
+            "mode": "from_beginning",
+            "host": "localhost:2181",
+            "path": "/tmp/zookeeper/",
+            "sessionTimeout": 30000,
+            "connectionTimeout": 30000
+        }
+    }
+}

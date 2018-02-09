@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd /files
+sbt 'set test in assembly := {}'  assembly

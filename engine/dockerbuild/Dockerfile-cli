@@ -1,0 +1,5 @@
+FROM vegas-ingest-engine
+
+#CLI COMMANDS
+ADD cli/start-job /usr/bin/
+RUN chmod +x /usr/bin/start-job

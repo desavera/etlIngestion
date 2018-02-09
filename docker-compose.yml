@@ -1,0 +1,72 @@
+version: '2'
+
+services:
+
+  cdh:
+    extends:
+      file: engine/docker-compose.yml
+      service: cdh
+    volumes:
+      - ./:/files
+      - ./hdfs-data:/data
+
+  web-api:
+    build:
+      context: web-api/dockerbuild
+      dockerfile: Dockerfile
+    container_name: web-api
+    environment:
+      SPRING_PROFILES_ACTIVE: "dev"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./web-api/:/opt/code
+      - ./build:/root/.m2
+    command: bash -c "java -jar /opt/code/vegas-ingest-web/target/vegas-ingest-web.war"
+  web-api.debug:
+    extends:
+      service: web-api
+    ports:
+      - "5088:5088"
+    command: bash -c "java -Xdebug -Xrunjdwp:transport=dt_socket,address=5088,server=y,suspend=y \
+                      -jar /opt/code/vegas-ingest-web/target/vegas-ingest-web.war"
+  web-api.build:
+    extends:
+      service: web-api
+    command: bash -c "mvn -f /opt/code package"
+  engine:
+    image: vegas-ingest-engine
+    build:
+      context: engine/dockerbuild
+      dockerfile: Dockerfile
+    container_name: engine
+    volumes:
+      - ./engine:/opt/code
+      - ./build/ivy2:/root/.ivy2
+      - ./build/.sbt:/root/.sbt
+    command: bash -c "(cd /opt/code; sbt assembly)"
+  engine.build:
+    extends:
+      service: engine
+    command: bash -c "(cd /opt/code; sbt assembly)"
+  engine.cli:
+    build:
+      context: engine/dockerbuild
+      dockerfile: Dockerfile-cli
+    container_name: engine-cli
+    environment:
+      DEBUG_MODE: "false"
+    ports:
+      - "5097:5097"
+    depends_on:
+      - "engine"
+      - "cdh"
+      - "web-api"
+    volumes:
+      - ./engine:/opt/code
+      - ./build/ivy2:/root/.ivy2
+      - ./build/.sbt:/root/.sbt
+    command: bash -c "start-job"
+
+volumes:
+  hdfs-data:

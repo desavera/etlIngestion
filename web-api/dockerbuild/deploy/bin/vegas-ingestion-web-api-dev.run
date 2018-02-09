@@ -1,0 +1,11 @@
+#!/bin/bash
+
+
+cd /docked
+
+# this will filter the current DEV version from pom
+export VEGAS_INGEST_API_VERSION=`grep -A1 "<artifactId>vegas-ingest" pom.xml | grep version | awk -F"<version>" '{print $2}' | awk -F"</version>" '{print $1}' `
+
+# the DEV war file path is locally defined 
+bin/vegas-ingestion-web-api.run vegas-ingest-web/target dev
+

@@ -1,0 +1,51 @@
+#imagem generica pros builds
+image: registry.b2w.io/docker-run/docker
+
+stages:
+  - build
+  - deploy
+  - staging
+  - production
+
+#primeiro estagio: Gerar o .war. A imagem docker com maven e jdk1.8 será a responsável por isso
+binary:build:
+  stage: build
+  image: registry.b2w.io/docker-run/maven
+  script:
+    - mvn clean package
+  artifacts:
+    #Sera gerada pasta target no web e o binario vai pra essa pasta (war), isso sera compartilhado com o stage do docker
+    paths:
+      - vegas-ingest-web/target
+
+#segundo estagio: buildar e fazer push da imagem docker com a api
+docker build and push:
+  stage: deploy
+  environment:
+    name: docker registry
+    url: "http://nexus3.b2w.io/#browse/search/docker=attributes.docker.imageName%3Ddocker-run%2F${CI_PROJECT_NAME}%20AND%20repository_name%3Ddocker-private"
+  variables:
+    DOCKER_IMAGE: registry.b2w.io/${CI_PROJECT_PATH}
+  only:
+    - master@docker-run/gitlab-trigger
+  script:
+    - make docker
+    - docker tag ${CI_PROJECT_NAME} ${DOCKER_IMAGE}
+    - docker push ${DOCKER_IMAGE}
+
+atlas deploy:
+  stage: staging
+  variables:
+    action: 'scale'
+    zone: 'GLETE'
+    instances: 1
+    endpoint: homolog.vegas-ingest.atlas.b2w
+    tenant: b2w
+  environment:
+    name: staging/vegas-ingest
+    url: http://homolog.vegas-ingest.atlas.b2w
+  image: registry.b2w.io/docker-run/hefesto-deploy
+  only:
+    - tags
+  script: |
+    hefesto-deploy -action "${action}" -zone "${zone}" -application "product-page" -configuration "product-page" -constraint "exclusive, UNLIKE, .*" -cpu 0.1 -endpoint "${endpoint}" -health "/resource-status" -healthCheck '{ "gracePeriodSeconds": 300, "ignoreHttp1xx ": false, "intervalSeconds": 60, "maxConsecutiveFailures": 3, "path": "/resource-status", "portIndex": 0, "protocol": "HTTP", "timeoutSeconds": 20 }' -instances ${instances} -logDir "/opt/logs" -memory 1024 -resource "product-page" -tag "${CI_BUILD_REF_NAME}" -tenant "${tenant}" -user pedro.andere -public no

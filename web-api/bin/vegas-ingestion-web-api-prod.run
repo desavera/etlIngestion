@@ -1,0 +1,9 @@
+#!/bin/bash
+
+
+# adds the api ip
+echo 10.13.0.105 dbveginpr.back.b2w >> /etc/hosts
+
+# the PROD war file path is dockered on /opt
+/opt/vegas-ingest/vegas-ingestion-web-api.run /opt/vegas-ingest prod
+

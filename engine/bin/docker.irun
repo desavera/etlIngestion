@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# This will start a container for Vegas Ingestion Engine in an interactive mode.
+
+sudo docker exec -it cdh /bin/bash

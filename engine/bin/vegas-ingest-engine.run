@@ -1,0 +1,5 @@
+export VERSION=`grep version build.sbt | awk -F":=" '{print $2}' | sed -e s/\"//g | sed -e s/" "//g`
+export TARGET_FILE=ingestengine-assembly-${VERSION}.jar
+
+# $SPARK_HOME/bin/spark-submit --jars /usr/lib/hive/lib/mysql-connector-java-5.1.39-bin.jar /files/target/scala-2.10/${TARGET_FILE} --def-file /files/data/example.definition
+$SPARK_HOME/bin/spark-submit --jars /usr/lib/hive/lib/mysql-connector-java-5.1.39-bin.jar /files/target/scala-2.10/${TARGET_FILE} --def-api $1 --job-id $2

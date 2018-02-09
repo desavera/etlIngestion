@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.b2winc.vegas.ingest</groupId>
+		<artifactId>vegas-ingest</artifactId>
+		<version>1.0.4</version>
+	</parent>
+
+	<artifactId>vegas-ingest-model</artifactId>
+	<packaging>jar</packaging>
+	<name>vegas-ingest-model</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<h2database.version>1.4.196</h2database.version>
+		<hibernate-validator.version>6.0.2.Final</hibernate-validator.version>
+		<jackson-datatype-hibernate5.version>2.8.10</jackson-datatype-hibernate5.version>
+		<liquibase-core.version>3.5.3</liquibase-core.version>
+		<liquibase-hibernate5.version>3.6</liquibase-hibernate5.version>
+	</properties>
+	
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- DATABASE DEPENDENCIES -->
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.liquibase.ext</groupId>
+			<artifactId>liquibase-hibernate5</artifactId>
+			<version>${liquibase-hibernate5.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-hibernate5</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-validator</artifactId>
+		</dependency>
+
+	</dependencies>
+
+</project>

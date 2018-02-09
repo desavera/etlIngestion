@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# This will create a container to run the Vegas Ingest API. The --network is
+# necessary so the engine container can "see" the API through the network. It's
+# not necessary to use "sudo", just to add your user to the "docker" group. The API
+# runs as a detached container already serving on the proper endpoints at the localhost.
+
+[ -z "$VEGAS_INGEST_API_VERSION" ] && { echo "please define VEGAS_INGEST_API_VERSION value..."; exit 1; }
+
+docker run --detach \
+    --name vegas-ingest-web-api \
+    --network=engine_default \
+    --publish 8080:8080 \
+    --dns 8.8.8.8 \
+    registry.b2w.io/b2wdigital/vegas-ingest-api:${VEGAS_INGEST_API_VERSION}

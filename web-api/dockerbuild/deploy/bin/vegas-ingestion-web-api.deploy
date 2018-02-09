@@ -1,0 +1,37 @@
+#!/bin/bash
+
+[ $# -eq 0 ] && { echo "Usage: $0 [VERSION_NUMBER]"; exit 1; }
+
+# This will deploy the Vegas Ingest API building a docker image with an up to date
+# war ball and pushing the new image to the central repo for B2W Atlas platform.
+
+sudo docker run -it \
+    --volume $(pwd):/docked \
+    registry.b2w.io/b2wdigital/vegas-ingestion-api /docked/bin/package.build
+
+# prepairs for building the new image
+rm -rf dockerbuild/deploy
+mkdir dockerbuild/deploy
+cp -r bin dockerbuild/deploy
+cp vegas-ingest-web/target/vegas-ingest-web.war dockerbuild/deploy
+
+# deploys on Atlas platform
+
+VERSION=$1
+cd dockerbuild
+cp Dockerfile Dockerfile-original
+cat <<EOF >> Dockerfile
+# DEPLOYED war ball for the API (see bin/vegas-ingest-api.deploy)
+ENV VEGAS_INGEST_API_VERSION $VERSION
+RUN mkdir /opt/vegas-ingest
+ADD deploy/vegas-ingest-web.war /opt/vegas-ingest/
+ADD deploy/bin/* /opt/vegas-ingest/
+
+ENTRYPOINT ["/opt/vegas-ingest/vegas-ingestion-web-api-prod.run","-b"]
+
+EOF
+
+sudo docker build -t registry.b2w.io/b2wdigital/vegas-ingest-api:${VERSION} .
+sudo docker push registry.b2w.io/b2wdigital/vegas-ingest-api:${VERSION} 
+
+mv Dockerfile-original Dockerfile

@@ -1,0 +1,610 @@
+#%RAML 0.8
+---
+title: Vegas Ingest API
+version: v1
+baseUri: http://api.vegas.b2w/ingest/{version}
+mediaType: application/json
+
+resourceTypes: !include http://raml-portal.atlas.b2w/spec/v2/resourceTypes.yaml
+traits: !include http://raml-portal.atlas.b2w/spec/v2/traits.yaml
+securitySchemes: !include http://raml-portal.atlas.b2w/spec/v2/securitySchemes.yaml
+
+schemas:
+  - !include http://raml-portal.atlas.b2w/spec/v2/schemas.yaml
+  - ingestDefinition: |
+      {
+        "properties": {
+            "id": {
+              "type": "string"
+            },
+            "account": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "dataInput": {
+              "$ref": "dataInput"
+            },
+            "transformers": {
+              "$ref": "transformArray"
+            },
+            "dataOutput": {
+              "$ref": "dataOutput"
+            },
+            "execution": {
+              "$ref": "execution"
+            },
+            "recovery": {
+              "$ref": "recovery"
+            }
+        }
+      }
+  - ingestDefinitionPost: |
+      {
+        "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            },
+            "definitionJson": {
+              "type": "object",
+              "required": [
+                "account",
+                "name",
+                "revision",
+                "dataInput",
+                "dataOutput",
+                "execution",
+                "recovery"
+              ],
+              "$ref": "ingestDefinition"
+            },
+            "schedulerJobId": {
+              "type": "string"
+            }
+        }
+      }
+  - ingestDefinitionPostArray: |
+      {
+        "type": "array",
+        "minItems": 0,
+        "uniqueItems": true,
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "name",
+            "definitionJson"
+          ],
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            },
+            "definitionJson": {
+              "type": "object",
+              "required": [
+                "account",
+                "name",
+                "revision",
+                "dataInput",
+                "dataOutput",
+                "execution",
+                "recovery"
+              ],
+              "$ref": "ingestDefinition"
+            }
+          }
+        }
+      }
+  - dataInput: |
+      {
+        "properties": {
+            "atype": {
+              "type": "string"
+            },
+            "args": {
+              "$ref": "args"
+            }
+        }
+      }
+  - args: |
+      {
+        "type": "object"
+      }
+  - transform: |
+      {
+        "properties": {
+          "atype": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "function": {
+            "type": "string"
+          }
+        }
+      }
+  - transformArray: |
+      {
+        "type": "array",
+        "minItems": 0,
+        "uniqueItems": false,
+        "items": {
+          "type": "object",
+          "required": [
+            "atype"
+          ],
+          "$ref": "transform"
+        }
+      }
+  - dataOutput: |
+      {
+        "properties": {
+            "atype": {
+              "type": "string"
+            },
+            "args": {
+              "$ref": "args"
+            }
+        }
+      }
+  - execution: |
+      {
+        "properties": {
+            "atype": {
+              "type": "string"
+            },
+            "args": {
+              "$ref": "args"
+            }
+        }
+      }
+  - recovery: |
+      {
+        "properties": {
+            "mode": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "sessionTimeout": {
+              "type": "number"
+            },
+            "connectionTimeout": {
+              "type": "number"
+            }
+        }
+      }
+  - errorResponse: |
+      {
+        "type":"object",
+        "$schema":"http://json-schema.org/draft-03/schema",
+        "required":false,
+        "properties":{
+          "status": {
+            "type":"string",
+            "required":true
+          },
+          "message": {
+            "type":"string",
+            "required":true
+          }
+        }
+      }
+  - void: |
+      {
+      }
+/resource-status:
+  description: Shows metadata about this application (JDK version, application version, package date, etc)
+  type: resource-status
+
+/health:
+  description: Show information about the health status of this application and its dependencies.
+  type: health
+
+/api:
+  description: API to interact with the ingestion definition service.
+  /ingestion-definitions:
+    description: Resource responsible to operations on ingestion-definitions.
+    type:
+      nestedcollection-GET:
+        getDescription: Return a list of all ingest-definitions (non-paginated).
+        getResponseSchema: ingestDefinitionPostArray
+        getResponseExample: |
+          [{
+            "id": 1234,
+            "name": "vegas-ingest-demo",
+            "definitionJson": {
+                "name": "vegas-ingest-demo",
+                "account": "vegas",
+                "revision": "1",
+                "dataInput": {
+                    "atype": "kafka",
+                    "args": {
+                        "brokers": "kairos-1.b2w:9092,kairos-2.b2w:9092,kairos-3.b2w:9092,kairos-4.b2w:9092,kairos-5.b2w:9092",
+                        "groupId": "vegas-ingest-demo",
+                        "topic": "search"
+                    }
+                },
+                "transformers": [{
+                    "atype": "flatMap",
+                    "args": {}
+                }],
+                "dataOutput": {
+                    "atype": "hdfs",
+                    "args": {
+                        "base_dir": "/tmp"
+                    }
+                },
+                "execution": {
+                    "atype": "stream",
+                    "args": {
+                        "master": "yarn-client",
+                        "directory": "/tmp/vegas-ingest",
+                        "cron": "0 00 06,07,08 ? * * 2017",
+                        "interval": "60",
+                        "bucketSize": 1
+                    }
+                },
+                "recovery": {
+                    "mode": "from_now_on",
+                    "host": "kairos-1.b2w:2181,kairos-2.b2w:2181,kairos-3.b2w:2181",
+                    "path": "/tmp/zookeeper",
+                    "sessionTimeout": 30000,
+                    "connectionTimeout": 30000
+                }
+              }
+            }]
+
+    post:
+      description: Creates a new ingestion-definition.
+      queryParameters:
+        persist:
+          description: Not implemented.
+          type: boolean
+          default: true
+          required: false
+      body:
+        application/json:
+          schema: ingestDefinitionPost
+          example: |
+            {
+              "name": "vegas-ingest-demo",
+              "definitionJson": {
+                  "name": "vegas-ingest-demo",
+                  "account": "vegas",
+                  "revision": "1",
+                  "dataInput": {
+                      "atype": "kafka",
+                      "args": {
+                          "brokers": "kairos-1.b2w:9092,kairos-2.b2w:9092,kairos-3.b2w:9092,kairos-4.b2w:9092,kairos-5.b2w:9092",
+                          "groupId": "vegas-ingest-demo",
+                          "topic": "search"
+                      }
+                  },
+                  "transformers": [{
+                      "atype": "flatMap",
+                      "args": {}
+                  }],
+                  "dataOutput": {
+                      "atype": "hdfs",
+                      "args": {
+                          "base_dir": "/tmp"
+                      }
+                  },
+                  "execution": {
+                      "atype": "stream",
+                      "args": {
+                          "master": "yarn-client",
+                          "directory": "/tmp/vegas-ingest",
+                          "cron": "0 00 06,07,08 ? * * 2017",
+                          "interval": "60",
+                          "bucketSize": 1
+                      }
+                  },
+                  "recovery": {
+                      "mode": "from_now_on",
+                      "host": "kairos-1.b2w:2181,kairos-2.b2w:2181,kairos-3.b2w:2181",
+                      "path": "/tmp/zookeeper",
+                      "sessionTimeout": 30000,
+                      "connectionTimeout": 30000
+                  }
+              }
+            }
+      responses:
+        400:
+          body:
+            application/json:
+              schema: errorResponse
+              example: |
+                {
+                  "status": "failed",
+                  "message": "message: xxxx"
+                }
+        422:
+          body:
+            application/json:
+              schema: errorResponse
+              example: |
+                {
+                  "status": "failed",
+                  "message": "message: xxxx"
+                }
+        500:
+           body:
+            application/json:
+              schema: errorResponse
+              example: |
+                {
+                  "status": "failed",
+                  "message": "message: xxxx"
+                }
+        200:
+          body:
+            application/json:
+              schema: ingestDefinitionPost
+              example: |
+                {
+                  "id": 1234,
+                  "name": "vegas-ingest-demo",
+                  "definitionJson": {
+                      "name": "vegas-ingest-demo",
+                      "account": "vegas",
+                      "revision": "1",
+                      "dataInput": {
+                          "atype": "kafka",
+                          "args": {
+                              "brokers": "kairos-1.b2w:9092,kairos-2.b2w:9092,kairos-3.b2w:9092,kairos-4.b2w:9092,kairos-5.b2w:9092",
+                              "groupId": "vegas-ingest-demo",
+                              "topic": "search"
+                          }
+                      },
+                      "transformers": [{
+                          "atype": "flatMap",
+                          "args": {}
+                      }],
+                      "dataOutput": {
+                          "atype": "hdfs",
+                          "args": {
+                              "base_dir": "/tmp"
+                          }
+                      },
+                      "execution": {
+                          "atype": "stream",
+                          "args": {
+                              "master": "yarn-client",
+                              "directory": "/tmp/vegas-ingest",
+                              "cron": "0 00 06,07,08 ? * * 2017",
+                              "interval": "60",
+                              "bucketSize": 1
+                          }
+                      },
+                      "recovery": {
+                          "mode": "from_now_on",
+                          "host": "kairos-1.b2w:2181,kairos-2.b2w:2181,kairos-3.b2w:2181",
+                          "path": "/tmp/zookeeper",
+                          "sessionTimeout": 30000,
+                          "connectionTimeout": 30000
+                      }
+                  }
+                }
+    put:
+      description: "Endpoit to update ingest definitions"
+      queryParameters:
+        persist:
+          description: Not implemented.
+          type: boolean
+          default: true
+          required: false
+      body:
+        application/json:
+          schema: ingestDefinitionPost
+          example: |
+            {
+              "id": 1234,
+              "name": "vegas-ingest-demo",
+              "definitionJson": {
+                  "name": "vegas-ingest-demo",
+                  "account": "vegas",
+                  "revision": "1",
+                  "dataInput": {
+                      "atype": "kafka",
+                      "args": {
+                          "brokers": "kairos-1.b2w:9092,kairos-2.b2w:9092,kairos-3.b2w:9092,kairos-4.b2w:9092,kairos-5.b2w:9092",
+                          "groupId": "vegas-ingest-demo",
+                          "topic": "search"
+                      }
+                  },
+                  "transformers": [{
+                      "atype": "flatMap",
+                      "args": {}
+                  }],
+                  "dataOutput": {
+                      "atype": "hdfs",
+                      "args": {
+                          "base_dir": "/tmp"
+                      }
+                  },
+                  "execution": {
+                      "atype": "stream",
+                      "args": {
+                          "master": "yarn-client",
+                          "directory": "/tmp/vegas-ingest",
+                          "cron": "0 00 06,07,08 ? * * 2017",
+                          "interval": "60",
+                          "bucketSize": 1
+                      }
+                  },
+                  "recovery": {
+                      "mode": "from_now_on",
+                      "host": "kairos-1.b2w:2181,kairos-2.b2w:2181,kairos-3.b2w:2181",
+                      "path": "/tmp/zookeeper",
+                      "sessionTimeout": 30000,
+                      "connectionTimeout": 30000
+                  }
+              }
+            }
+      responses:
+        400:
+          body:
+            application/json:
+              schema: errorResponse
+              example: |
+                {
+                  "status": "failed",
+                  "message": "message: xxxx"
+                }
+        422:
+          body:
+            application/json:
+              schema: errorResponse
+              example: |
+                {
+                  "status": "failed",
+                  "message": "message: xxxx"
+                }
+        500:
+           body:
+            application/json:
+              schema: errorResponse
+              example: |
+                {
+                  "status": "failed",
+                  "message": "message: xxxx"
+                }
+        200:
+          body:
+            application/json:
+              schema: ingestDefinitionPost
+              example: |
+                {
+                  "id": 1234,
+                  "name": "vegas-ingest-demo",
+                  "definitionJson": {
+                      "name": "vegas-ingest-demo",
+                      "account": "vegas",
+                      "revision": "1",
+                      "dataInput": {
+                          "atype": "kafka",
+                          "args": {
+                              "brokers": "kairos-1.b2w:9092,kairos-2.b2w:9092,kairos-3.b2w:9092,kairos-4.b2w:9092,kairos-5.b2w:9092",
+                              "groupId": "vegas-ingest-demo",
+                              "topic": "search"
+                          }
+                      },
+                      "transformers": [{
+                          "atype": "flatMap",
+                          "args": {}
+                      }],
+                      "dataOutput": {
+                          "atype": "hdfs",
+                          "args": {
+                              "base_dir": "/tmp"
+                          }
+                      },
+                      "execution": {
+                          "atype": "stream",
+                          "args": {
+                              "master": "yarn-client",
+                              "directory": "/tmp/vegas-ingest",
+                              "cron": "0 00 06,07,08 ? * * 2017",
+                              "interval": "60",
+                              "bucketSize": 1
+                          }
+                      },
+                      "recovery": {
+                          "mode": "from_now_on",
+                          "host": "kairos-1.b2w:2181,kairos-2.b2w:2181,kairos-3.b2w:2181",
+                          "path": "/tmp/zookeeper",
+                          "sessionTimeout": 30000,
+                          "connectionTimeout": 30000
+                      }
+                  }
+                }
+    /{id}:
+      description: "Resource that handles a specific ingest definition"
+      uriParameters:
+        id:
+          description: "The ingest definition id to be returned"
+          type: number
+          example: 123
+      get:
+        description: "Endpoint that returns a specific ingest definition"
+        is: [ http-200, http-400, http-404, http-500 ]
+        responses:
+          200:
+            description: "Ingest definition obtained with success"
+            body:
+              application/json:
+                schema: ingestDefinitionPost
+                example: |
+                  {
+                  "id": 1234,
+                  "name": "vegas-ingest-demo",
+                  "definitionJson": {
+                      "name": "vegas-ingest-demo",
+                      "account": "vegas",
+                      "revision": "1",
+                      "dataInput": {
+                          "atype": "kafka",
+                          "args": {
+                              "brokers": "kairos-1.b2w:9092,kairos-2.b2w:9092,kairos-3.b2w:9092,kairos-4.b2w:9092,kairos-5.b2w:9092",
+                              "groupId": "vegas-ingest-demo",
+                              "topic": "search"
+                          }
+                      },
+                      "transformers": [{
+                          "atype": "flatMap",
+                          "args": {}
+                      }],
+                      "dataOutput": {
+                          "atype": "hdfs",
+                          "args": {
+                              "base_dir": "/tmp"
+                          }
+                      },
+                      "execution": {
+                          "atype": "stream",
+                          "args": {
+                              "master": "yarn-client",
+                              "directory": "/tmp/vegas-ingest",
+                              "cron": "0 00 06,07,08 ? * * 2017",
+                              "interval": "60",
+                              "bucketSize": 1
+                          }
+                      },
+                      "recovery": {
+                          "mode": "from_now_on",
+                          "host": "kairos-1.b2w:2181,kairos-2.b2w:2181,kairos-3.b2w:2181",
+                          "path": "/tmp/zookeeper",
+                          "sessionTimeout": 30000,
+                          "connectionTimeout": 30000
+                      }
+                    }
+                  }
+
+      delete:
+        description: "Endpoint to delete a specific ingest definition"
+        is: [ http-200, http-400, http-404, http-500 ]
+        responses:
+          200:
+            description: "Resource deleted"
+            body:
+              application/json:
+                schema: void
+                example: |
+                  {}
