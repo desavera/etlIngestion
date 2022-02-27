@@ -3,7 +3,7 @@ spring:
         driver-class-name: com.mysql.jdbc.Driver
         password: xxxxxxxxxxx
         url: jdbc:mysql://xxxxxxxxxx:3309/vegas
-        username: vegas-ingest
+        username: xxxxxxxxxxx
     jpa:
         hibernate:
             ddl-auto: create    
