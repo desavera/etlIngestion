@@ -2,7 +2,7 @@ spring:
     datasource:
         driver-class-name: com.mysql.jdbc.Driver
         password: vegas-ingest
-        url: jdbc:mysql://dbveginpr.back.b2w:3309/vegas
+        url: jdbc:mysql://xxxxxxxxxx:3309/vegas
         username: vegas-ingest
     jpa:
         hibernate:
