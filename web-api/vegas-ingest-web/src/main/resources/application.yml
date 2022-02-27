@@ -1,7 +1,7 @@
 spring:
     datasource:
         driver-class-name: com.mysql.jdbc.Driver
-        password: vegas-ingest
+        password: xxxxxxxxxxx
         url: jdbc:mysql://xxxxxxxxxx:3309/vegas
         username: vegas-ingest
     jpa:
